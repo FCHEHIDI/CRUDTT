@@ -1,5 +1,7 @@
 """Tests des endpoints User."""
 
+BASE = "/api/v1"
+
 
 def test_root(client):
     """Le health-check renvoie status ok."""
@@ -12,7 +14,7 @@ def test_root(client):
 def test_create_user(client):
     """Créer un utilisateur renvoie 201."""
     response = client.post(
-        "/users/",
+        f"{BASE}/users/",
         json={"username": "fares", "email": "fares@example.com"},
     )
     assert response.status_code == 201
@@ -25,18 +27,18 @@ def test_create_user(client):
 def test_create_user_duplicate_email(client):
     """Un email dupliqué renvoie 409."""
     payload = {"username": "fares", "email": "fares@example.com"}
-    client.post("/users/", json=payload)
+    client.post(f"{BASE}/users/", json=payload)
     response = client.post(
-        "/users/", json={"username": "fares2", "email": "fares@example.com"}
+        f"{BASE}/users/", json={"username": "fares2", "email": "fares@example.com"}
     )
     assert response.status_code == 409
 
 
 def test_list_users(client):
     """Lister les utilisateurs après création."""
-    client.post("/users/", json={"username": "a", "email": "a@test.com"})
-    client.post("/users/", json={"username": "b", "email": "b@test.com"})
-    response = client.get("/users/")
+    client.post(f"{BASE}/users/", json={"username": "a", "email": "a@test.com"})
+    client.post(f"{BASE}/users/", json={"username": "b", "email": "b@test.com"})
+    response = client.get(f"{BASE}/users/")
     assert response.status_code == 200
     assert len(response.json()) == 2
 
@@ -44,25 +46,25 @@ def test_list_users(client):
 def test_get_user(client):
     """Récupérer un utilisateur par ID."""
     create_resp = client.post(
-        "/users/", json={"username": "fares", "email": "fares@test.com"}
+        f"{BASE}/users/", json={"username": "fares", "email": "fares@test.com"}
     )
     user_id = create_resp.json()["id"]
-    response = client.get(f"/users/{user_id}")
+    response = client.get(f"{BASE}/users/{user_id}")
     assert response.status_code == 200
     assert response.json()["username"] == "fares"
 
 
 def test_get_user_not_found(client):
     """Un ID inexistant renvoie 404."""
-    response = client.get("/users/9999")
+    response = client.get(f"{BASE}/users/9999")
     assert response.status_code == 404
 
 
 def test_delete_user(client):
     """Supprimer un utilisateur renvoie 204."""
     create_resp = client.post(
-        "/users/", json={"username": "fares", "email": "fares@test.com"}
+        f"{BASE}/users/", json={"username": "fares", "email": "fares@test.com"}
     )
     user_id = create_resp.json()["id"]
-    response = client.delete(f"/users/{user_id}")
+    response = client.delete(f"{BASE}/users/{user_id}")
     assert response.status_code == 204
