@@ -14,7 +14,7 @@ class Settings(BaseSettings):
         CORS_ORIGINS: Liste des origines CORS autorisées.
     """
 
-    APP_NAME: str = "mon-api"
+    APP_NAME: str = "Internal Tools API"
     APP_ENV: str = "development"
     DEBUG: bool = True
     DATABASE_URL: str = "sqlite:///./dev.db"
