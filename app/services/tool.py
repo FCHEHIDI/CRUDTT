@@ -218,7 +218,7 @@ class ToolService:
         Returns:
             ToolDetail complet.
         """
-        from app.models.user import User  # import local pour éviter circularité
+        from app.models.tool import Tool  # import local pour éviter circularité
 
         # Métriques usage_logs sur les 30 derniers jours
         thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)

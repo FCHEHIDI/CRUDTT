@@ -51,8 +51,12 @@ TAGS_METADATA = [
         ),
     },
     {
-        "name": "users",
-        "description": "Gestion des utilisateurs internes (CRUD).",
+        "name": "analytics",
+        "description": (
+            "Analytics & reporting des outils SaaS. "
+            "Répartition des coûts, outils coûteux, analyse par catégorie, "
+            "outils sous-utilisés et analyse fournisseurs."
+        ),
     },
     {
         "name": "health",
