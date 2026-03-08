@@ -94,6 +94,8 @@ pytest -v
 
 ## Endpoints
 
+### Outils
+
 | Méthode | Route | Description |
 |---------|-------|-------------|
 | `GET` | `/api/v1/tools/` | Liste avec filtres, tri, pagination |
@@ -102,7 +104,17 @@ pytest -v
 | `PUT` | `/api/v1/tools/{id}` | Mise à jour partielle |
 | `GET` | `/health` | Vérification état de l'application |
 
-### Filtres disponibles (`GET /api/v1/tools/`)
+### Analytics
+
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| `GET` | `/api/v1/analytics/department-costs` | Coûts agrégés par département |
+| `GET` | `/api/v1/analytics/expensive-tools` | Top outils les plus coûteux avec rating d'efficacité |
+| `GET` | `/api/v1/analytics/tools-by-category` | Répartition outils et coûts par catégorie |
+| `GET` | `/api/v1/analytics/low-usage-tools` | Outils sous-utilisés avec niveau d'alerte |
+| `GET` | `/api/v1/analytics/vendor-summary` | Synthèse fournisseurs avec efficacité vendor |
+
+### Filtres disponibles — Outils (`GET /api/v1/tools/`)
 
 | Paramètre | Type | Exemple |
 |-----------|------|---------|
@@ -115,6 +127,62 @@ pytest -v
 | `order` | string | `asc` \| `desc` |
 | `page` | int | `1` |
 | `limit` | int | `20` |
+
+### Filtres disponibles — Analytics
+
+#### `GET /api/v1/analytics/department-costs`
+
+| Paramètre | Type | Défaut | Description |
+|-----------|------|--------|-------------|
+| `sort_by` | string | `total_cost` | `total_cost` \| `department` |
+| `order` | string | `desc` | `asc` \| `desc` |
+
+#### `GET /api/v1/analytics/expensive-tools`
+
+| Paramètre | Type | Défaut | Description |
+|-----------|------|--------|-------------|
+| `limit` | int | `10` | Nombre de résultats (1–100) |
+| `min_cost` | float | — | Filtre coût mensuel minimum |
+
+#### `GET /api/v1/analytics/low-usage-tools`
+
+| Paramètre | Type | Défaut | Description |
+|-----------|------|--------|-------------|
+| `max_users` | int | `5` | Seuil d'utilisateurs actifs (≥ 0) |
+
+---
+
+## Analytics — Logique métier
+
+Tous les endpoints analytics portent **exclusivement sur les outils `status=active`**.
+
+### Ratings d'efficacité outil (`efficiency_rating`)
+
+Basé sur le ratio `cost_per_user` de l'outil vs la moyenne entreprise pondérée :
+
+| Rating | Condition |
+|--------|-----------|
+| `excellent` | cpu < 50 % de la moyenne |
+| `good` | 50 % ≤ cpu < 80 % |
+| `average` | 80 % ≤ cpu ≤ 120 % |
+| `low` | cpu > 120 % ou 0 utilisateurs |
+
+### Niveau d'alerte outil sous-utilisé (`warning_level`)
+
+| Niveau | Condition |
+|--------|-----------|
+| `high` | 0 utilisateurs **ou** cost/user > 50 € |
+| `medium` | 20 € ≤ cost/user ≤ 50 € |
+| `low` | cost/user < 20 € |
+
+### Efficacité fournisseur (`vendor_efficiency`)
+
+| Rating | `average_cost_per_user` |
+|--------|-------------------------|
+| `excellent` | < 5 € |
+| `good` | 5 – 15 € |
+| `average` | 15 – 25 € |
+| `poor` | > 25 € |
 
 ---
 
@@ -136,21 +204,20 @@ CRUDTT/
 │   │   └── dependencies.py     # Injection de dépendances (get_db)
 │   ├── models/
 │   │   ├── category.py         # ORM Category
-│   │   ├── tool.py             # ORM Tool + enums Python
-│   │   └── user.py             # ORM User
+│   │   └── tool.py             # ORM Tool + enums Python
 │   ├── schemas/
 │   │   ├── tool.py             # ToolCreate, ToolUpdate, ToolRead, ToolDetail
-│   │   └── user.py
+│   │   └── analytics.py        # 5 modèles de réponse Pydantic (analytics)
 │   ├── services/
 │   │   ├── tool.py             # Logique métier (filtres, calcul coût total, métriques)
-│   │   └── user.py
+│   │   └── analytics.py        # AnalyticsService — 5 méthodes + helpers métier
 │   └── api/v1/
 │       ├── endpoints/
 │       │   ├── tool.py         # Handlers HTTP (codes retour, 409/404/400)
-│       │   └── user.py
+│       │   └── analytics.py    # Handlers analytics (Query validation, model_validate)
 │       └── routers/
 │           ├── tool.py         # Wiring routes + metadata Swagger
-│           └── user.py
+│           └── analytics.py    # Wiring analytics + descriptions Swagger
 │
 ├── database/
 │   ├── docker-compose.yml      # Profiles mysql / postgres
@@ -160,8 +227,7 @@ CRUDTT/
 │
 └── tests/
     ├── conftest.py             # Fixtures SQLite + override get_db
-    ├── test_tool.py            # 31 tests (liste, détail, création, mise à jour)
-    └── test_user.py
+    └── test_tool.py            # 31 tests (liste, détail, création, mise à jour)
 ```
 
 **Choix d'architecture :**
