@@ -19,17 +19,25 @@ logger = logging.getLogger(__name__)
 DESCRIPTION = """
 ## Internal Tools Management API
 
-API de gestion des outils SaaS internes d'une entreprise.
+API de gestion des outils SaaS internes de l'entreprise TechCorp Solutions.
 Permet de **lister**, **consulter**, **créer** et **mettre à jour** les outils
 utilisés par les différents départements.
 
 ### Fonctionnalités
 
+#### Gestion des outils
 - **Filtrage** par département, statut, catégorie et coût mensuel
 - **Tri** par nom, coût ou date de création
 - **Pagination** configurable
 - **Métriques d'utilisation** par outil (sessions, durée moyenne)
 - **Coût total mensuel** calculé automatiquement
+
+#### Analytics & Reporting
+- **Répartition des coûts** par département avec pourcentage budgétaire
+- **Top outils coûteux** avec rating d'efficacité (`excellent` → `low`)
+- **Analyse par catégorie** : budget, utilisateurs, efficacité comparée
+- **Outils sous-utilisés** avec niveau d'alerte et économies estimées
+- **Synthèse fournisseurs** : coût par utilisateur, efficacité, départements couverts
 
 
 ### Codes d'erreur
